@@ -1,5 +1,7 @@
 local Brain = require("ai.brain")
 local Memory = require("ai.memory")
+require("ai.player")
+require("ai.world")
 
 local AI = {}
 

@@ -3,6 +3,7 @@ local Player = require("ai.player")
 local World = require("ai.world")
 local Planner = require("ai.planner")
 local Actions = require("ai.actions")
+local Knowledge = require("ai.knowledge")
 
 local Brain = {}
 
@@ -35,8 +36,7 @@ end
 
 function Brain.think(memory)
 
-    -- Здесь позже появятся анализ,
-    -- принятие решений и обучение.
+    Knowledge.update(memory)
 
 end
 
@@ -46,9 +46,11 @@ end
 
 function Brain.plan(memory)
 
+    local iron = Knowledge.get_resource(memory, "iron")
+
     Planner.choose_target(
         memory,
-        memory.world.iron
+        iron
     )
 
 end

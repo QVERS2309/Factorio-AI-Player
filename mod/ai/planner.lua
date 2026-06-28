@@ -1,21 +1,33 @@
+local Logger = require("util.logger")
+local Goals = require("ai.goals")
+
 local Planner = {}
 
-function Planner.choose_target(memory, iron)
+----------------------------------------------------
+-- Планирование
+----------------------------------------------------
 
-    if memory.target.position then
+function Planner.update(memory)
+
+    local goal = Goals.get(memory)
+
+    if not goal then
         return
     end
 
-    if not iron then
-        return
+    ----------------------------------------------------
+    -- Добыча ресурсов
+    ----------------------------------------------------
+
+    if goal.type == "mine" then
+
+        memory.target.type = goal.resource
+        memory.target.entity = goal.target
+        memory.target.position = goal.target.position
+
+        Logger.info("Plan created: Mine " .. goal.resource)
+
     end
-
-    memory.target.type = "iron-ore"
-
-    memory.target.position = {
-        x = iron.position.x,
-        y = iron.position.y
-    }
 
 end
 

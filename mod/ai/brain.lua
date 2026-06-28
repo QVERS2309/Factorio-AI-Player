@@ -1,14 +1,16 @@
 local Logger = require("util.logger")
 local Player = require("ai.player")
 local World = require("ai.world")
+
+local Knowledge = require("ai.knowledge")
+local Goals = require("ai.goals")
 local Planner = require("ai.planner")
 local Actions = require("ai.actions")
-local Knowledge = require("ai.knowledge")
 
 local Brain = {}
 
 ----------------------------------------------------
--- Наблюдение
+-- Observe
 ----------------------------------------------------
 
 function Brain.observe(memory)
@@ -31,32 +33,36 @@ function Brain.observe(memory)
 end
 
 ----------------------------------------------------
--- Размышление
+-- Think
 ----------------------------------------------------
 
 function Brain.think(memory)
 
     Knowledge.update(memory)
 
+    if memory.target.position then
+        memory.thought = "I have a target."
+    else
+        memory.thought = "Searching for work."
+    end
+
+    Logger.info(memory.thought)
+
 end
 
 ----------------------------------------------------
--- Планирование
+-- Plan
 ----------------------------------------------------
 
 function Brain.plan(memory)
 
-    local iron = Knowledge.get_resource(memory, "iron")
-
-    Planner.choose_target(
-        memory,
-        iron
-    )
+    Goals.update(memory)
+    Planner.update(memory)
 
 end
 
 ----------------------------------------------------
--- Выполнение
+-- Act
 ----------------------------------------------------
 
 function Brain.act(memory)
@@ -73,7 +79,7 @@ function Brain.act(memory)
 end
 
 ----------------------------------------------------
--- Инициализация
+-- Init
 ----------------------------------------------------
 
 function Brain.init()
@@ -83,7 +89,7 @@ function Brain.init()
 end
 
 ----------------------------------------------------
--- Главный цикл
+-- Update
 ----------------------------------------------------
 
 function Brain.update(tick)

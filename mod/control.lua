@@ -1,3 +1,9 @@
+local AI = require("ai.init")
+
 script.on_init(function()
-  game.print("Factorio AI Player loaded!")
-end
+    AI.init()
+end)
+
+script.on_event(defines.events.on_tick, function(event)
+    AI.update(event.tick)
+end)

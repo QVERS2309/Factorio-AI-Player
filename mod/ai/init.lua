@@ -1,6 +1,7 @@
 local Brain = require("ai.brain")
 local Memory = require("ai.memory")
 local Navigation = require("ai.navigation")
+local Controller = require("ai.controller")
 
 require("ai.player")
 require("ai.world")
@@ -24,6 +25,10 @@ end
 ----------------------------------------------------
 
 function AI.update(tick)
+
+    if not Controller.is_enabled() then
+        return
+    end
 
     Navigation.update()
 

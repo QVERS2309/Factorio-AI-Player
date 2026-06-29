@@ -1,6 +1,7 @@
 local Pathfinding = require("ai.pathfinding")
 local Movement = require("ai.movement")
 local Math2D = require("util.math2d")
+local Route = require("ai.route")
 
 local Navigation = {}
 
@@ -37,7 +38,7 @@ function Navigation.set_target(position)
 end
 
 ----------------------------------------------------
--- Есть ли активная цель
+-- Есть ли цель
 ----------------------------------------------------
 
 function Navigation.has_target()
@@ -85,6 +86,62 @@ end
 
 function Navigation.update(tick)
 
+    ----------------------------------------------------
+    -- Если существует маршрут —
+    -- двигаемся по нему
+    ----------------------------------------------------
+
+    if not Route.is_finished() then
+
+        local waypoint = Route.current()
+
+        if waypoint then
+
+            local position = Movement.get_position()
+
+            if not position then
+                return false
+            end
+
+            local target = waypoint.position or waypoint
+
+            if Math2D.distance(position, target) <= ARRIVAL_DISTANCE then
+
+                Route.next()
+
+                waypoint = Route.current()
+
+                if not waypoint then
+
+                    Movement.stop()
+
+                    return true
+
+                end
+
+                target = waypoint.position or waypoint
+
+            end
+
+            Movement.walk(
+
+                Movement.direction(
+                    position,
+                    target
+                )
+
+            )
+
+            return false
+
+        end
+
+    end
+
+    ----------------------------------------------------
+    -- Старый режим
+    ----------------------------------------------------
+
     if not Navigation.active then
         return true
     end
@@ -95,20 +152,6 @@ function Navigation.update(tick)
         return false
     end
 
-    ----------------------------------------------------
-    -- Получить направление от Pathfinding
-    ----------------------------------------------------
-
-    local direction_override = Pathfinding.find_direction(
-        nil,
-        Navigation.target,
-        tick
-    )
-
-    ----------------------------------------------------
-    -- Проверка достижения цели
-    ----------------------------------------------------
-
     if Math2D.distance(position, Navigation.target) <= ARRIVAL_DISTANCE then
 
         Navigation.stop()
@@ -117,13 +160,7 @@ function Navigation.update(tick)
 
     end
 
-    ----------------------------------------------------
-    -- Движение
-    ----------------------------------------------------
-
     Movement.walk(
-
-        direction_override or
 
         Movement.direction(
             position,

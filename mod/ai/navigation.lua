@@ -1,3 +1,4 @@
+local Player = require("ai.player")
 local Pathfinding = require("ai.pathfinding")
 local Movement = require("ai.movement")
 local Math2D = require("util.math2d")
@@ -12,7 +13,7 @@ local Navigation = {}
 local ARRIVAL_DISTANCE = 0.5
 
 ----------------------------------------------------
--- Внутреннее состояние
+-- Состояние
 ----------------------------------------------------
 
 Navigation.target = nil
@@ -38,7 +39,7 @@ function Navigation.set_target(position)
 end
 
 ----------------------------------------------------
--- Есть ли цель
+-- Есть цель?
 ----------------------------------------------------
 
 function Navigation.has_target()
@@ -58,7 +59,7 @@ function Navigation.get_target()
 end
 
 ----------------------------------------------------
--- Очистить цель
+-- Очистить
 ----------------------------------------------------
 
 function Navigation.clear_target()
@@ -69,7 +70,7 @@ function Navigation.clear_target()
 end
 
 ----------------------------------------------------
--- Остановить движение
+-- Стоп
 ----------------------------------------------------
 
 function Navigation.stop()
@@ -81,14 +82,41 @@ function Navigation.stop()
 end
 
 ----------------------------------------------------
+-- Движение к точке
+----------------------------------------------------
+
+local function move_to(position, target, tick)
+
+    local player = Player.get()
+
+    if not player then
+        return false
+    end
+
+    local direction = Pathfinding.find_direction(
+        player,
+        target,
+        tick
+    )
+
+    if not direction then
+        return false
+    end
+
+    Movement.walk(direction)
+
+    return true
+
+end
+
+----------------------------------------------------
 -- Обновление
 ----------------------------------------------------
 
 function Navigation.update(tick)
 
     ----------------------------------------------------
-    -- Если существует маршрут —
-    -- двигаемся по нему
+    -- Движение по маршруту
     ----------------------------------------------------
 
     if not Route.is_finished() then
@@ -123,23 +151,14 @@ function Navigation.update(tick)
 
             end
 
-            Movement.walk(
-
-                Movement.direction(
-                    position,
-                    target
-                )
-
-            )
-
-            return false
+            return move_to(position, target, tick)
 
         end
 
     end
 
     ----------------------------------------------------
-    -- Старый режим
+    -- Обычное движение
     ----------------------------------------------------
 
     if not Navigation.active then
@@ -160,16 +179,11 @@ function Navigation.update(tick)
 
     end
 
-    Movement.walk(
-
-        Movement.direction(
-            position,
-            Navigation.target
-        )
-
+    return move_to(
+        position,
+        Navigation.target,
+        tick
     )
-
-    return false
 
 end
 

@@ -1,4 +1,5 @@
-local Player = require("ai.player")
+local Pathfinding = require("ai.pathfinding")
+local Movement = require("ai.movement")
 
 local Navigation = {}
 
@@ -45,6 +46,27 @@ function Navigation.has_target()
 end
 
 ----------------------------------------------------
+-- Получить цель
+----------------------------------------------------
+
+function Navigation.get_target()
+
+    return Navigation.target
+
+end
+
+----------------------------------------------------
+-- Очистить цель
+----------------------------------------------------
+
+function Navigation.clear_target()
+
+    Navigation.target = nil
+    Navigation.active = false
+
+end
+
+----------------------------------------------------
 -- Получить расстояние
 ----------------------------------------------------
 
@@ -58,83 +80,14 @@ local function distance(a, b)
 end
 
 ----------------------------------------------------
--- Определить направление
-----------------------------------------------------
-
-local function direction(from, to)
-
-    local dx = to.x - from.x
-    local dy = to.y - from.y
-
-    local DEAD_ZONE = 0.2
-
-    ------------------------------------------------
-    -- Вертикаль
-    ------------------------------------------------
-
-    if math.abs(dx) < DEAD_ZONE then
-
-        if dy > 0 then
-            return defines.direction.south
-        else
-            return defines.direction.north
-        end
-
-    end
-
-    ------------------------------------------------
-    -- Горизонталь
-    ------------------------------------------------
-
-    if math.abs(dy) < DEAD_ZONE then
-
-        if dx > 0 then
-            return defines.direction.east
-        else
-            return defines.direction.west
-        end
-
-    end
-
-    ------------------------------------------------
-    -- Диагонали
-    ------------------------------------------------
-
-    if dx > 0 and dy < 0 then
-        return defines.direction.northeast
-    end
-
-    if dx > 0 and dy > 0 then
-        return defines.direction.southeast
-    end
-
-    if dx < 0 and dy > 0 then
-        return defines.direction.southwest
-    end
-
-    return defines.direction.northwest
-
-end
-
-----------------------------------------------------
--- Остановить игрока
+-- Остановить движение
 ----------------------------------------------------
 
 function Navigation.stop()
 
-    local player = Player.get()
+    Movement.stop()
 
-    if player then
-
-        player.walking_state = {
-            walking = false,
-            direction = player.walking_state.direction
-        }
-
-    end
-
-    Navigation.target = nil
-    Navigation.active = false
+    Navigation.clear_target()
 
 end
 
@@ -148,13 +101,46 @@ function Navigation.update(tick)
         return true
     end
 
-    local player = Player.get()
+    local position = Movement.get_position and Movement.get_position()
 
-    if not player then
+    -- Совместимость с текущей версией
+    if not position then
+        local Player = require("ai.player")
+        local player = Player.get()
+
+        if not player then
+            return false
+        end
+
+        position = player.position
+
+        local direction_override = Pathfinding.find_direction(
+            player,
+            Navigation.target,
+            tick
+        )
+
+        if distance(position, Navigation.target) <= ARRIVAL_DISTANCE then
+
+            Navigation.stop()
+
+            return true
+
+        end
+
+        Movement.walk(
+            direction_override or
+            Movement.direction(position, Navigation.target)
+        )
+
         return false
     end
 
-    local position = player.position
+    local direction_override = Pathfinding.find_direction(
+        nil,
+        Navigation.target,
+        tick
+    )
 
     if distance(position, Navigation.target) <= ARRIVAL_DISTANCE then
 
@@ -164,16 +150,10 @@ function Navigation.update(tick)
 
     end
 
-    player.walking_state = {
-
-        walking = true,
-
-        direction = direction(
-            position,
-            Navigation.target
-        )
-
-    }
+    Movement.walk(
+        direction_override or
+        Movement.direction(position, Navigation.target)
+    )
 
     return false
 

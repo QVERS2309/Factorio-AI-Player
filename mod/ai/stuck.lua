@@ -4,16 +4,16 @@ local Stuck = {}
 -- Константы
 ----------------------------------------------------
 
-local CHECK_INTERVAL = 60      -- проверяем раз в секунду
-local MIN_DISTANCE = 0.20      -- минимальное смещение
-local MAX_STUCK_CHECKS = 3     -- через 3 секунды считаем, что застряли
+local CHECK_INTERVAL = 60       -- проверка раз в секунду
+local MIN_DISTANCE = 0.20       -- минимальное смещение
+local MAX_CHECKS = 3            -- через 3 проверки считаем, что застрял
 
 ----------------------------------------------------
 -- Состояние
 ----------------------------------------------------
 
 Stuck.last_position = nil
-Stuck.last_tick = 0
+Stuck.last_check_tick = nil
 Stuck.counter = 0
 
 ----------------------------------------------------
@@ -23,7 +23,7 @@ Stuck.counter = 0
 function Stuck.reset()
 
     Stuck.last_position = nil
-    Stuck.last_tick = 0
+    Stuck.last_check_tick = nil
     Stuck.counter = 0
 
 end
@@ -47,24 +47,32 @@ end
 
 function Stuck.update(position, tick)
 
-    if not position then
+    if not position or not tick then
         return false
     end
 
-    if not Stuck.last_position then
+    ------------------------------------------------
+    -- Первый запуск
+    ------------------------------------------------
+
+    if Stuck.last_position == nil then
 
         Stuck.last_position = {
             x = position.x,
             y = position.y
         }
 
-        Stuck.last_tick = tick
+        Stuck.last_check_tick = tick
 
         return false
 
     end
 
-    if tick - Stuck.last_tick < CHECK_INTERVAL then
+    ------------------------------------------------
+    -- Ждём следующую проверку
+    ------------------------------------------------
+
+    if (tick - Stuck.last_check_tick) < CHECK_INTERVAL then
         return false
     end
 
@@ -75,7 +83,7 @@ function Stuck.update(position, tick)
         y = position.y
     }
 
-    Stuck.last_tick = tick
+    Stuck.last_check_tick = tick
 
     if moved < MIN_DISTANCE then
         Stuck.counter = Stuck.counter + 1
@@ -83,7 +91,7 @@ function Stuck.update(position, tick)
         Stuck.counter = 0
     end
 
-    return Stuck.counter >= MAX_STUCK_CHECKS
+    return Stuck.counter >= MAX_CHECKS
 
 end
 

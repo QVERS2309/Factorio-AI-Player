@@ -1,19 +1,22 @@
+local Sensors = require("ai.sensors")
 local Stuck = require("ai.stuck")
+local Directions = require("util.directions")
+local Movement = require("ai.movement")
 
 local Pathfinding = {}
 
 ----------------------------------------------------
--- Инициализация
+-- Найти направление к цели
 ----------------------------------------------------
 
-function Pathfinding.init()
+local function target_direction(position, target)
 
-    Stuck.reset()
+    return Movement.direction(position, target)
 
 end
 
 ----------------------------------------------------
--- Найти направление обхода
+-- Поиск направления
 ----------------------------------------------------
 
 function Pathfinding.find_direction(player, target, tick)
@@ -26,21 +29,48 @@ function Pathfinding.find_direction(player, target, tick)
         return nil
     end
 
-    ----------------------------------------------------
-    -- Проверка застревания
-    ----------------------------------------------------
+    local position = player.position
 
-    if Stuck.update(player.position, tick) then
+    ------------------------------------------------
+    -- Основное направление
+    ------------------------------------------------
 
-        -- Пока только сообщаем Navigation,
-        -- что особого направления нет.
-        -- Здесь позже появится обход препятствий.
+    local dir = target_direction(position, target)
 
-        return nil
+    ------------------------------------------------
+    -- Если путь свободен —
+    -- идём прямо
+    ------------------------------------------------
 
+    if Sensors.is_walkable_direction(position, dir) then
+        return dir
     end
 
-    return nil
+    ------------------------------------------------
+    -- Пробуем вправо
+    ------------------------------------------------
+
+    local right = Directions.rotate_right(dir)
+
+    if Sensors.is_walkable_direction(position, right) then
+        return right
+    end
+
+    ------------------------------------------------
+    -- Пробуем влево
+    ------------------------------------------------
+
+    local left = Directions.rotate_left(dir)
+
+    if Sensors.is_walkable_direction(position, left) then
+        return left
+    end
+
+    ------------------------------------------------
+    -- Пока сдаёмся
+    ------------------------------------------------
+
+    return dir
 
 end
 

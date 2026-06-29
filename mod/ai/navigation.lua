@@ -1,5 +1,6 @@
 local Pathfinding = require("ai.pathfinding")
 local Movement = require("ai.movement")
+local Math2D = require("util.math2d")
 
 local Navigation = {}
 
@@ -67,19 +68,6 @@ function Navigation.clear_target()
 end
 
 ----------------------------------------------------
--- Получить расстояние
-----------------------------------------------------
-
-local function distance(a, b)
-
-    local dx = b.x - a.x
-    local dy = b.y - a.y
-
-    return math.sqrt(dx * dx + dy * dy)
-
-end
-
-----------------------------------------------------
 -- Остановить движение
 ----------------------------------------------------
 
@@ -101,40 +89,15 @@ function Navigation.update(tick)
         return true
     end
 
-    local position = Movement.get_position and Movement.get_position()
+    local position = Movement.get_position()
 
-    -- Совместимость с текущей версией
     if not position then
-        local Player = require("ai.player")
-        local player = Player.get()
-
-        if not player then
-            return false
-        end
-
-        position = player.position
-
-        local direction_override = Pathfinding.find_direction(
-            player,
-            Navigation.target,
-            tick
-        )
-
-        if distance(position, Navigation.target) <= ARRIVAL_DISTANCE then
-
-            Navigation.stop()
-
-            return true
-
-        end
-
-        Movement.walk(
-            direction_override or
-            Movement.direction(position, Navigation.target)
-        )
-
         return false
     end
+
+    ----------------------------------------------------
+    -- Получить направление от Pathfinding
+    ----------------------------------------------------
 
     local direction_override = Pathfinding.find_direction(
         nil,
@@ -142,7 +105,11 @@ function Navigation.update(tick)
         tick
     )
 
-    if distance(position, Navigation.target) <= ARRIVAL_DISTANCE then
+    ----------------------------------------------------
+    -- Проверка достижения цели
+    ----------------------------------------------------
+
+    if Math2D.distance(position, Navigation.target) <= ARRIVAL_DISTANCE then
 
         Navigation.stop()
 
@@ -150,9 +117,19 @@ function Navigation.update(tick)
 
     end
 
+    ----------------------------------------------------
+    -- Движение
+    ----------------------------------------------------
+
     Movement.walk(
+
         direction_override or
-        Movement.direction(position, Navigation.target)
+
+        Movement.direction(
+            position,
+            Navigation.target
+        )
+
     )
 
     return false

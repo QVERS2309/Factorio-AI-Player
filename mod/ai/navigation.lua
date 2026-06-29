@@ -66,15 +66,13 @@ local function direction(from, to)
     local dx = to.x - from.x
     local dy = to.y - from.y
 
-    if math.abs(dx) > math.abs(dy) then
+    local DEAD_ZONE = 0.2
 
-        if dx > 0 then
-            return defines.direction.east
-        else
-            return defines.direction.west
-        end
+    ------------------------------------------------
+    -- Вертикаль
+    ------------------------------------------------
 
-    else
+    if math.abs(dx) < DEAD_ZONE then
 
         if dy > 0 then
             return defines.direction.south
@@ -83,6 +81,38 @@ local function direction(from, to)
         end
 
     end
+
+    ------------------------------------------------
+    -- Горизонталь
+    ------------------------------------------------
+
+    if math.abs(dy) < DEAD_ZONE then
+
+        if dx > 0 then
+            return defines.direction.east
+        else
+            return defines.direction.west
+        end
+
+    end
+
+    ------------------------------------------------
+    -- Диагонали
+    ------------------------------------------------
+
+    if dx > 0 and dy < 0 then
+        return defines.direction.northeast
+    end
+
+    if dx > 0 and dy > 0 then
+        return defines.direction.southeast
+    end
+
+    if dx < 0 and dy > 0 then
+        return defines.direction.southwest
+    end
+
+    return defines.direction.northwest
 
 end
 
@@ -112,7 +142,7 @@ end
 -- Обновление
 ----------------------------------------------------
 
-function Navigation.update()
+function Navigation.update(tick)
 
     if not Navigation.active then
         return true

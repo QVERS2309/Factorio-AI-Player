@@ -27,10 +27,16 @@ end
 function AI.update(tick)
 
     if not Controller.is_enabled() then
+
+        if Navigation.has_target() then
+            Navigation.stop()
+        end
+
         return
+
     end
 
-    Navigation.update()
+    Navigation.update(tick)
 
     Brain.update(tick)
 

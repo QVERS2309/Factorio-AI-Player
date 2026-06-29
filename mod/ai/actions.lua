@@ -1,4 +1,5 @@
 local Logger = require("util.logger")
+local Navigation = require("ai.navigation")
 
 local Actions = {}
 
@@ -9,30 +10,84 @@ local Actions = {}
 function Actions.move_to(position)
 
     if not position then
-        return
+        return true
     end
 
-    Logger.info(
-        string.format(
-            "Moving to %.1f %.1f",
-            position.x,
-            position.y
+    ----------------------------------------------------
+    -- Если цель еще не установлена
+    ----------------------------------------------------
+
+    if not Navigation.has_target() then
+
+        Navigation.set_target(position)
+
+        Logger.info(
+            string.format(
+                "Moving to %.1f %.1f",
+                position.x,
+                position.y
+            )
         )
-    )
+
+    end
+
+    ----------------------------------------------------
+    -- Обновляем движение
+    ----------------------------------------------------
+
+    return Navigation.update()
 
 end
 
 ----------------------------------------------------
--- Добывать
+-- Остановиться
 ----------------------------------------------------
 
-function Actions.mine(target)
+function Actions.stop()
 
-    if not target then
+    Navigation.stop()
+
+end
+
+----------------------------------------------------
+-- Добыча (заготовка)
+----------------------------------------------------
+
+function Actions.mine(entity)
+
+    if not entity then
         return
     end
 
-    Logger.info("Mining")
+    Logger.info("Mining...")
+
+end
+
+----------------------------------------------------
+-- Строительство (заготовка)
+----------------------------------------------------
+
+function Actions.build(entity)
+
+    if not entity then
+        return
+    end
+
+    Logger.info("Building...")
+
+end
+
+----------------------------------------------------
+-- Крафт (заготовка)
+----------------------------------------------------
+
+function Actions.craft(item)
+
+    if not item then
+        return
+    end
+
+    Logger.info("Crafting " .. item)
 
 end
 
